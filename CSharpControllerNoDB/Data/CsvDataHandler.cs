@@ -6,9 +6,9 @@ namespace CSharpControllerNoDB.Data
     {
         public static HashSet<Student> ReadStudentsFromCsv()
         {
-            var students = new HashSet<Student>(); // custom comparer for hashset
+            var students = new HashSet<Student>();
 
-            using (var reader = new StreamReader("/dane.csv"))
+            using (var reader = new StreamReader("./dane.csv"))
             using (var logWriter = new StreamWriter("./log.txt", true))
             {
                 string line;
@@ -39,7 +39,6 @@ namespace CSharpControllerNoDB.Data
                         MothersName = columns[7],
                         FathersName = columns[8],
                     };
-                    // TODO: check for duplicates(done using the implemented Equals and GetHashCode methods in Student)
                     students.Add(student);
                 }
             }
@@ -63,9 +62,49 @@ namespace CSharpControllerNoDB.Data
             }
         }
 
-        public static void UpdateStudent(Student student)
+        public static bool UpdateStudent(Student student)
         {
+            HashSet<Student> studentList = ReadStudentsFromCsv();
 
+            // Using FirstOrDefault because it will return "null" if no record is found
+            Student studentToUpdate = studentList.FirstOrDefault(s => s.IndexNumber == student.IndexNumber);
+
+            if (studentToUpdate == null)
+            {
+                // Handle error - student not found
+                return false;
+            }
+
+            // No IndexNumber as this is the unique identifier
+            studentToUpdate.Name = student.Name;
+            studentToUpdate.Surname = student.Surname;
+            studentToUpdate.Studies = student.Studies;
+            studentToUpdate.Mode = student.Mode;
+            studentToUpdate.DateOfBirth = student.DateOfBirth;
+            studentToUpdate.Email = student.Email;
+            studentToUpdate.FathersName = student.FathersName;
+            studentToUpdate.MothersName = student.MothersName;
+
+            // false paratemer to make sure we're overwriting the existing file
+            using (var writer = new StreamWriter("./dane.csv", false))
+            {
+                foreach (var stud in studentList)
+                {
+                    writer.WriteLine(
+                        $"{stud.Name}," +
+                        $"{stud.Surname}," +
+                        $"{stud.Studies}," +
+                        $"{stud.Mode}," +
+                        $"{stud.IndexNumber}," +
+                        $"{stud.DateOfBirth}," +
+                        $"{stud.Email}," +
+                        $"{stud.MothersName}," +
+                        $"{stud.FathersName}"
+                        );
+                }
+            }
+
+            return true;
         }
     }
 }
