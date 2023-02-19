@@ -44,8 +44,17 @@ namespace CSharpControllerNoDB.Data
             }
             return students;
         }
-        public static void WriteStudentToCsv(Student student)
+        public static bool WriteStudentToCsv(Student student)
         {
+            HashSet<Student> students = ReadStudentsFromCsv();
+
+            bool studentExists = students.Any(s => s.IndexNumber == student.IndexNumber);
+            if (studentExists)
+            {
+                return false;
+            }
+
+            // Passing "true" as argument to add a new line into the .csv file instead of removing it
             using (var logWriter = new StreamWriter("./dane.csv", true))
             {
                 logWriter.WriteLine(
@@ -54,12 +63,14 @@ namespace CSharpControllerNoDB.Data
                     $"{student.Studies}," +
                     $"{student.Mode}," +
                     $"{student.IndexNumber}," +
-                    $"{student.DateOfBirth}," +
+                    $"{student.DateOfBirth.ToString("dd/MM/yyyy")}," +
                     $"{student.Email}," +
                     $"{student.MothersName}," +
                     $"{student.FathersName}"
                     );
             }
+
+            return true;
         }
 
         public static bool UpdateStudent(Student student)
@@ -96,7 +107,7 @@ namespace CSharpControllerNoDB.Data
                         $"{stud.Studies}," +
                         $"{stud.Mode}," +
                         $"{stud.IndexNumber}," +
-                        $"{stud.DateOfBirth}," +
+                        $"{stud.DateOfBirth.ToString("dd/MM/yyyy")}," +
                         $"{stud.Email}," +
                         $"{stud.MothersName}," +
                         $"{stud.FathersName}"
@@ -105,6 +116,49 @@ namespace CSharpControllerNoDB.Data
             }
 
             return true;
+        }
+
+        public static bool DeleteStudent(string id)
+        {
+            HashSet<Student> studentList = ReadStudentsFromCsv();
+
+            // Using FirstOrDefault because it will return "null" if no record is found
+            Student studentToDelete = studentList.FirstOrDefault(s => s.IndexNumber == id);
+
+            if (studentToDelete == null)
+            {
+                // Handle error - student not found
+                return false;
+            }
+
+            studentList.Remove(studentToDelete);
+
+
+            // false paratemer to make sure we're overwriting the existing file
+            using (var writer = new StreamWriter("./dane.csv", false))
+            {
+                foreach (var stud in studentList)
+                {
+                    writer.WriteLine(
+                        $"{stud.Name}," +
+                        $"{stud.Surname}," +
+                        $"{stud.Studies}," +
+                        $"{stud.Mode}," +
+                        $"{stud.IndexNumber}," +
+                        $"{stud.DateOfBirth.ToString("dd/MM/yyyy")}," +
+                        $"{stud.Email}," +
+                        $"{stud.MothersName}," +
+                        $"{stud.FathersName}"
+                        );
+                }
+            }
+
+            return true;
+        }
+
+        public CsvDataHandler()
+        {
+
         }
     }
 }
